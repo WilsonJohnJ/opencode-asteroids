@@ -32,15 +32,17 @@ Luego visita `http://localhost:3000`.
 
 ## Puntuación
 
-| Asteroide | Puntos |
-| --------- | ------ |
-| Grande    | 20     |
-| Mediano   | 50     |
-| Pequeño   | 100    |
+| Asteroide      | Puntos |
+| -------------- | ------ |
+| Grande         | 20     |
+| Mediano        | 50     |
+| Pequeño        | 100    |
+| Estrella fugaz | 150    |
 
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
+- **Estrella fugaz**: asteroide especial que cruza el campo mucho más rápido que los normales y desaparece tras unos segundos (parpadea al expirar). Vale 150 puntos y no se parte
 - Power-up **Velocidad**: al destruir asteroides puede caer un rombo que duplica la velocidad de la nave durante 5 segundos
 - Partículas de explosión al destruir asteroides

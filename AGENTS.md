@@ -5,7 +5,7 @@ Vanilla HTML5 Canvas arcade game (Asteroids clone). No frameworks, no bundler, n
 ## Running and verification
 
 - No `package.json`, no build, no tests, no lint. There is **nothing to run to verify**; check changes by opening `index.html` in a browser (double-click) or `npx serve .` → `http://localhost:3000`.
-- All game logic lives in `game.js` (~423 lines), loaded from `index.html` as a plain `<script>` — not an ES module, so **no `import`/`export`**. If you need modules, restructuring is required.
+- All game logic lives in `game.js` (~550 lines), loaded from `index.html` as a plain `<script>` — not an ES module, so **no `import`/`export`**. If you need modules, restructuring is required.
 - `'use strict'` is set at the top of `game.js`.
 
 ## Codebase gotchas
@@ -20,4 +20,4 @@ Vanilla HTML5 Canvas arcade game (Asteroids clone). No frameworks, no bundler, n
 
 - Section comments, README, and in-game UI strings ("NIVEL", "PUNTAJE") are in **Spanish**; code identifiers are English. Keep new comments/UI in Spanish to match.
 - Game uses ES6 classes and section divider comments (`// ── Section ───`).
-- README "Descripción" mentions power-ups/the "estrella fugaz" asteroid type still in progress — **not implemented** in `game.js` (only ship, bullets, asteroids, particles). Don't assume this feature exists.
+- Power-ups (Velocidad) and the special "estrella fugaz" asteroid (`ShootingStar`) are implemented in `game.js`. The shooting star moves fast, expires on its own `ttl`, scores `STAR_POINTS`, doesn't split, and is flagged with `isShootingStar` so level completion ignores it.
