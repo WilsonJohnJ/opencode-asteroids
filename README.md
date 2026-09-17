@@ -42,4 +42,5 @@ Luego visita `http://localhost:3000`.
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
+- Power-up **Velocidad**: al destruir asteroides puede caer un rombo que duplica la velocidad de la nave durante 5 segundos
 - Partículas de explosión al destruir asteroides
