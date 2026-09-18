@@ -206,6 +206,7 @@ class Ship {
     this.thrusting     = false;
     this.invincible    = 3;
     this.speedBoost    = 0;
+    this.tripleBoost   = 0;
     this.shootCooldown = 0;
     this.dead          = false;
   }
@@ -215,6 +216,7 @@ class Ship {
     if (this.invincible    > 0) this.invincible    -= dt;
     if (this.shootCooldown > 0) this.shootCooldown -= dt;
     if (this.speedBoost    > 0) this.speedBoost    -= dt;
+    if (this.tripleBoost   > 0) this.tripleBoost   -= dt;
 
     const ROT    = 3.5;   // rad/s
     const THRUST = 260;  // px/s²
@@ -243,6 +245,14 @@ class Ship {
     const NOSE = 21;
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
+    if (this.tripleBoost > 0) {
+      const SPREAD = Math.PI / 12;   // ±15° en abanico
+      return [
+        new Bullet(ox, oy, this.angle - SPREAD),
+        new Bullet(ox, oy, this.angle),
+        new Bullet(ox, oy, this.angle + SPREAD),
+      ];
+    }
     return [new Bullet(ox, oy, this.angle)];
   }
 
@@ -313,13 +323,14 @@ class Particle {
   }
 }
 
-// ── Power-up (Velocidad) ──────────────────────────────────────────────────────
+// ── Power-ups (Velocidad / Tiro triple) ──────────────────────────────────────
 const POWERUP_CHANCE   = 0.12;  // probabilidad de caer de un asteroide
 const POWERUP_DURATION = 5;     // segundos que dura el efecto
 const POWERUP_TTL      = 8;     // segundos hasta que desaparece solo
 
 class PowerUp {
-  constructor(x, y) {
+  constructor(x, y, type = 'speed') {
+    this.type = type;   // 'speed' | 'triple'
     this.x = x;
     this.y = y;
     const angle = rand(0, Math.PI * 2);
@@ -348,8 +359,8 @@ class PowerUp {
     ctx.translate(this.x, this.y);
     ctx.rotate(this.phase * 0.4);
 
-    // Rombo
-    ctx.fillStyle = '#ffd23f';
+    // Rombo (amarillo = velocidad, celeste = tiro triple)
+    ctx.fillStyle = this.type === 'triple' ? '#4fd2ff' : '#ffd23f';
     ctx.beginPath();
     ctx.moveTo(0, -this.radius);
     ctx.lineTo(this.radius, 0);
@@ -358,12 +369,12 @@ class PowerUp {
     ctx.closePath();
     ctx.fill();
 
-    // Letra "V"
+    // Letra "T" / "V"
     ctx.fillStyle = '#222';
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('V', 0, 1);
+    ctx.fillText(this.type === 'triple' ? 'T' : 'V', 0, 1);
     ctx.restore();
   }
 }
@@ -496,7 +507,7 @@ function update(dt) {
         explode(a.x, a.y, a.isShootingStar ? 14 : a.size * 5);
         // Posible drop del power-up (uno a la vez)
         if (powerups.length === 0 && Math.random() < POWERUP_CHANCE)
-          powerups.push(new PowerUp(a.x, a.y));
+          powerups.push(new PowerUp(a.x, a.y, Math.random() < 0.5 ? 'speed' : 'triple'));
         if (!a.isShootingStar) newAsteroids.push(...a.split());
       }
     }
@@ -518,7 +529,8 @@ function update(dt) {
   for (const p of powerups) {
     if (dist(ship, p) < ship.radius + p.radius) {
       p.dead = true;
-      ship.speedBoost = POWERUP_DURATION;
+      if (p.type === 'triple') ship.tripleBoost = POWERUP_DURATION;
+      else                     ship.speedBoost  = POWERUP_DURATION;
       explode(p.x, p.y, 10);
     }
   }
@@ -558,21 +570,24 @@ function drawHUD() {
   for (let i = 0; i < lives; i++)
     drawLifeIcon(W - 16 - i * 22, 18);
 
-  // Indicador del power-up de velocidad
-  if (ship.speedBoost > 0) {
-    const pct  = ship.speedBoost / POWERUP_DURATION;
-    const bx   = 14, by = H - 26;
-    const barW = 120, barH = 8;
+  // Indicador de power-ups activos
+  const drawPowerBar = (label, color, pct, y) => {
+    const bx = 14, barW = 120, barH = 8;
     ctx.textAlign = 'left';
     ctx.font      = '14px monospace';
-    ctx.fillStyle = '#ffd23f';
-    ctx.fillText('VELOCIDAD', bx, by - 5);
+    ctx.fillStyle = color;
+    ctx.fillText(label, bx, y - 5);
     ctx.strokeStyle = '#666';
     ctx.lineWidth   = 1;
-    ctx.strokeRect(bx, by, barW, barH);
-    ctx.fillStyle = '#ffd23f';
-    ctx.fillRect(bx, by, barW * pct, barH);
-  }
+    ctx.strokeRect(bx, y, barW, barH);
+    ctx.fillStyle = color;
+    ctx.fillRect(bx, y, barW * pct, barH);
+  };
+
+  if (ship.tripleBoost > 0)
+    drawPowerBar('TIRO TRIPLE', '#4fd2ff', ship.tripleBoost / POWERUP_DURATION, H - 48);
+  if (ship.speedBoost > 0)
+    drawPowerBar('VELOCIDAD', '#ffd23f', ship.speedBoost / POWERUP_DURATION, H - 26);
 }
 
 function drawOverlay(title, sub) {
