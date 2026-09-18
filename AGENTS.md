@@ -5,8 +5,8 @@ Vanilla HTML5 Canvas arcade game (Asteroids clone). No frameworks, no bundler, n
 ## Running and verification
 
 - No `package.json`, no build, no tests, no lint. There is **nothing to run to verify**; check changes by opening `index.html` in a browser (double-click) or `npx serve .` → `http://localhost:3000`.
-- All game logic lives in `game.js` (~550 lines), loaded from `index.html` as a plain `<script>` — not an ES module, so **no `import`/`export`**. If you need modules, restructuring is required.
-- `'use strict'` is set at the top of `game.js`.
+- All game logic lives in `game.js` (~600 lines), loaded from `index.html` as a plain `<script>` — not an ES module, so **no `import`/`export`**. If you need modules, restructuring is required. The ship-skin catalog lives in `skins.js` (loaded before `game.js`); it uses plain globals.
+- `'use strict'` is set at the top of `game.js` and `skins.js`.
 
 ## Codebase gotchas
 

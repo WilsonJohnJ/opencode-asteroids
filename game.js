@@ -208,6 +208,7 @@ class Ship {
     this.speedBoost    = 0;
     this.shootCooldown = 0;
     this.dead          = false;
+    this.skin          = currentSkin;
   }
 
   update(dt) {
@@ -254,29 +255,7 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth   = 1.5;
-    ctx.lineJoin    = 'round';
-
-    // Silueta clásica: triángulo con muesca trasera
-    ctx.beginPath();
-    ctx.moveTo( 20,  0);   // nariz
-    ctx.lineTo(-12, -9);   // ala izquierda
-    ctx.lineTo( -7,  0);   // muesca trasera
-    ctx.lineTo(-12,  9);   // ala derecha
-    ctx.closePath();
-    ctx.stroke();
-
-    // Llama del propulsor
-    if (this.thrusting && Math.random() > 0.35) {
-      ctx.beginPath();
-      ctx.moveTo(-8, -4);
-      ctx.lineTo(-8 - rand(6, 14), 0);
-      ctx.lineTo(-8,  4);
-      ctx.strokeStyle = 'rgba(255, 130, 0, 0.85)';
-      ctx.stroke();
-    }
-
+    this.skin.draw(ctx, this);
     ctx.restore();
   }
 }
@@ -374,6 +353,17 @@ let score, lives, level;
 let state;      // 'playing' | 'dead' | 'gameover'
 let deadTimer;
 let starTimer;
+let currentSkin = loadSkin();
+let skinNoticeTimer = 0;
+let skinNoticeText = '';
+
+function applySkin(skin) {
+  currentSkin = skin;
+  localStorage.setItem(SKIN_STORAGE_KEY, skin.id);
+  skinNoticeText = `SKIN: ${skin.name}`;
+  skinNoticeTimer = 2;
+  if (ship) ship.skin = currentSkin;
+}
 
 function spawnAsteroids(count) {
   const SAFE_DIST = 130;
@@ -442,6 +432,10 @@ function killShip() {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 function update(dt) {
+  // Cambio de skin (funciona en cualquier estado) y banner del HUD
+  if (pressed('KeyC')) applySkin(cycleSkin(currentSkin));
+  if (skinNoticeTimer > 0) skinNoticeTimer -= dt;
+
   if (state === 'gameover') {
     if (pressed('Space')) initGame();
     particles.forEach(p => p.update(dt));
@@ -532,16 +526,22 @@ function drawLifeIcon(x, y) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(-Math.PI / 2);
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth   = 1.2;
-  ctx.lineJoin    = 'round';
-  ctx.beginPath();
-  ctx.moveTo( 9,  0);
-  ctx.lineTo(-6, -5);
-  ctx.lineTo(-3,  0);
-  ctx.lineTo(-6,  5);
-  ctx.closePath();
-  ctx.stroke();
+
+  if (currentSkin.drawIcon) {
+    currentSkin.drawIcon(ctx);
+  } else {
+    // Silueta clásica con el color de la skin actual
+    ctx.strokeStyle = currentSkin.color;
+    ctx.lineWidth   = 1.2;
+    ctx.lineJoin    = 'round';
+    ctx.beginPath();
+    ctx.moveTo( 9,  0);
+    ctx.lineTo(-6, -5);
+    ctx.lineTo(-3,  0);
+    ctx.lineTo(-6,  5);
+    ctx.closePath();
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -554,6 +554,13 @@ function drawHUD() {
 
   ctx.textAlign = 'center';
   ctx.fillText(`NIVEL ${level}`, W / 2, 26);
+
+  // Banner de cambio de skin
+  if (skinNoticeTimer > 0) {
+    ctx.fillStyle   = currentSkin.color;
+    ctx.font        = '14px monospace';
+    ctx.fillText(skinNoticeText, W / 2, 48);
+  }
 
   for (let i = 0; i < lives; i++)
     drawLifeIcon(W - 16 - i * 22, 18);
