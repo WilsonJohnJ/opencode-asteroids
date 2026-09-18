@@ -47,5 +47,6 @@ Luego visita `http://localhost:3000`.
 - **Estrella fugaz**: asteroide especial que cruza el campo mucho más rápido que los normales y desaparece tras unos segundos (parpadea al expirar). Vale 150 puntos y no se parte
 - Power-up **Velocidad**: al destruir asteroides puede caer un rombo amarillo que duplica la velocidad de la nave durante 5 segundos
 - Power-up **Tiro triple**: rombo celeste que hace que la nave dispare 3 balas en abanico durante 5 segundos
+- Power-up **Escudo**: al destruir asteroides también puede caer un hexágono que otorga un escudo de hasta 3 cargas. Al tocar un asteroide con el escudo activo, este lo absorbe y destruye el asteroide en vez de perder una vida
 - **Skins de la nave**: pulsa `C` para alternar entre apariencias (Clásica, Neón cian, Dorada). La skin elegida se guarda en `localStorage`, se refleja en los íconos de vida y no afecta la física de la nave
 - Partículas de explosión al destruir asteroides
