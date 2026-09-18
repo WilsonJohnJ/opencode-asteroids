@@ -45,4 +45,5 @@ Luego visita `http://localhost:3000`.
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - **Estrella fugaz**: asteroide especial que cruza el campo mucho más rápido que los normales y desaparece tras unos segundos (parpadea al expirar). Vale 150 puntos y no se parte
 - Power-up **Velocidad**: al destruir asteroides puede caer un rombo que duplica la velocidad de la nave durante 5 segundos
+- Power-up **Escudo**: al destruir asteroides también puede caer un hexágono que otorga un escudo de hasta 3 cargas. Al tocar un asteroide con el escudo activo, este lo absorbe y destruye el asteroide en vez de perder una vida
 - Partículas de explosión al destruir asteroides
