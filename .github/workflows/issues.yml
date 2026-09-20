@@ -1,0 +1,103 @@
+name: issue-triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    if: github.event.issue.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Triage y etiquetado automático
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const author = issue.user.login;
+            const haystack = `${issue.title}\n${issue.body || ''}`.toLowerCase();
+
+            function tieneInfo(body) {
+              if (!body) return false;
+              const texto = body.trim().replace(/[-\s]/g, '');
+              return texto.length >= 80;
+            }
+
+            // Clasificación por keywords (español e inglés) contra labels existentes
+            const keywordMap = {
+              bug: ['bug', 'error', 'crash', 'falla', 'no funciona', 'defecto', 'peta', 'problem'],
+              enhancement: ['feature', 'mejora', 'nueva', 'sugerencia', 'propuesta', 'add', 'enhancement', 'quisiera'],
+              documentation: ['documentaci', 'doc', 'docs', 'readme', 'tutorial', 'guía', 'guia'],
+              question: ['duda', 'pregunta', 'question', 'cómo', 'como hago', 'ayuda', 'help']
+            };
+
+            const sugeridas = [];
+            const coincidencias = [];
+            for (const [label, words] of Object.entries(keywordMap)) {
+              const hit = words.find((w) => haystack.includes(w));
+              if (hit) {
+                sugeridas.push(label);
+                coincidencias.push(`${label} → "${hit}"`);
+              }
+            }
+
+            // Se asegura de que el label de estado exista
+            async function ensureLabel(name, color, description) {
+              try {
+                await octokit.rest.issues.getLabel({ owner, repo, name });
+              } catch {
+                await octokit.rest.issues.createLabel({ owner, repo, name, color, description });
+              }
+            }
+            await ensureLabel('needs-triage', 'fbca04', 'Pendiente de revisión inicial (triage)');
+
+            const labels = ['needs-triage', ...sugeridas];
+            await octokit.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels });
+
+            const fecha = new Date().toLocaleString('es-ES', {
+              year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const listaLabels = labels.length
+              ? labels.map((l) => `- \`${l}\``).join('\n')
+              : '- (ninguna)';
+
+            const etiquetado = coincidencias.length
+              ? `Clasificación automática por coincidencia de keywords:\n\n${coincidencias.map((c) => `> ${c}`).join('\n')}`
+              : 'No se encontraron keywords para clasificar el contenido.';
+
+            const template = tieneInfo(issue.body)
+              ? ''
+              : `
+            ## ✅ Template de reporte
+            Se detectó que el issue tiene poca información. Completa lo que falte para acelerar la revisión:
+            - [ ] Descripción clara del problema o solicitud
+            - [ ] Pasos para reproducir
+            - [ ] Comportamiento esperado
+            - [ ] Comportamiento actual
+            - [ ] Screenshots o logs
+            - [ ] Entorno (OS, navegador, versión)
+            `;
+
+            const comment = `Hola @${author} 👋 Gracias por abrir este issue. Este es un resumen automático para ayudar en la revisión.
+
+            ## 📋 Información del issue
+            - **Issue:** #${issue.number}
+            - **Autor:** @${author}
+            - **Creado:** ${fecha}
+            - **Repo:** ${owner}/${repo}
+
+            ## 🏷️ Labels aplicados
+            ${listaLabels}
+
+            <sub>${etiquetado}</sub>
+            ${template}
+            ---
+            _Comentario generado automáticamente por el workflow de triage. El contenido original del issue no fue modificado._`;
+
+            await octokit.rest.issues.createComment({
+              owner, repo, issue_number: issue.number, body: comment
+            });
