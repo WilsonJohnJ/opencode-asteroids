@@ -7,8 +7,11 @@
 //                      (ship.x, ship.y) y rotado a ship.angle
 //   drawIcon(ctx)    — dibuja una versión pequeña para el HUD (opcional;
 //                      por defecto se usa la silueta clásica con `color`)
+//   scale (opcional, por defecto 1)           — multiplicador de tamaño de la
+//                      nave (dibujo, hitbox y punto de disparo)
+//   pointsMultiplier (opcional, por defecto 1) — multiplicador de puntos
 //
-// La skin no altera la física: la hitbox la define Ship.radius.
+// La skin no altera la física más allá del `scale` de su hitbox.
 
 const SKINS = [
   {
@@ -122,6 +125,53 @@ const SKINS = [
         ctx.strokeStyle = 'rgba(255, 190, 40, 0.9)';
         ctx.stroke();
       }
+    },
+  },
+  {
+    id: 'morada',
+    name: 'Púrpura',
+    color: '#b54bff',
+    scale: 2,             // dos veces más grande que la nave original
+    pointsMultiplier: 2,  // el jugador recibe el doble de puntos
+
+    draw(ctx, ship) {
+      ctx.save();
+
+      // Nave dos veces más grande que el resto de skins
+      ctx.scale(this.scale, this.scale);
+
+      ctx.strokeStyle = '#b54bff';
+      ctx.fillStyle   = 'rgba(181, 75, 255, 0.15)';
+      ctx.lineWidth   = 1.5;
+      ctx.lineJoin    = 'round';
+
+      // Silueta clásica (se agranda con el scale)
+      ctx.beginPath();
+      ctx.moveTo( 20,  0);   // nariz
+      ctx.lineTo(-12, -9);   // ala izquierda
+      ctx.lineTo( -7,  0);   // muesca trasera
+      ctx.lineTo(-12,  9);   // ala derecha
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Cabina morada más clara
+      ctx.fillStyle = 'rgba(200, 130, 255, 0.5)';
+      ctx.beginPath();
+      ctx.arc(7, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Llama del propulsor
+      if (ship.thrusting && Math.random() > 0.35) {
+        ctx.beginPath();
+        ctx.moveTo(-8, -4);
+        ctx.lineTo(-8 - (6 + Math.random() * 8), 0);
+        ctx.lineTo(-8,  4);
+        ctx.strokeStyle = 'rgba(180, 80, 255, 0.85)';
+        ctx.stroke();
+      }
+
+      ctx.restore();
     },
   },
 ];

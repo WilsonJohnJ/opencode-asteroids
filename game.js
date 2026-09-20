@@ -202,7 +202,7 @@ class Ship {
     this.angle  = -Math.PI / 2;
     this.vx     = 0;
     this.vy     = 0;
-    this.radius = 12;
+    this.radius = 12 * (currentSkin.scale || 1);
     this.thrusting      = false;
     this.invincible     = 3;
     this.shield         = 0;   // cargas del escudo
@@ -246,7 +246,7 @@ class Ship {
   tryShoot() {
     if (this.shootCooldown > 0 || this.dead) return [];
     this.shootCooldown = 0.2;
-    const NOSE = 21;
+    const NOSE = 21 * (this.skin.scale || 1);
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
     if (this.tripleBoost > 0) {
@@ -270,12 +270,14 @@ class Ship {
     ctx.rotate(this.angle);
     this.skin.draw(ctx, this);
 
-    // Anillo del escudo
+    // Anillo del escudo (escala con el tamaño de la nave)
     if (this.shield > 0) {
+      const scale  = this.skin.scale || 1;
+      const rShield = 27 * scale;
       const active = this.shieldLull > 0;
       const alpha  = active ? 1 : 0.45 + 0.2 * Math.sin(Date.now() / 220);
       ctx.beginPath();
-      ctx.arc(0, 0, 27, 0, Math.PI * 2);
+      ctx.arc(0, 0, rShield, 0, Math.PI * 2);
       ctx.strokeStyle = `rgba(77,225,255,${alpha.toFixed(2)})`;
       ctx.lineWidth   = active ? 3 : 2;
       ctx.stroke();
@@ -284,7 +286,7 @@ class Ship {
       for (let i = 0; i < this.shield; i++) {
         const a = -Math.PI / 2 + (i - (this.shield - 1) / 2) * 0.5;
         ctx.beginPath();
-        ctx.arc(Math.cos(a) * 27, Math.sin(a) * 27, 2.2, 0, Math.PI * 2);
+        ctx.arc(Math.cos(a) * rShield, Math.sin(a) * rShield, 2.2, 0, Math.PI * 2);
         ctx.fillStyle = '#4de1ff';
         ctx.fill();
       }
@@ -541,7 +543,7 @@ function update(dt) {
       if (!a.dead && !b.dead && dist(b, a) < a.radius) {
         b.dead = true;
         a.dead = true;
-        score += a.isShootingStar ? STAR_POINTS : POINTS[a.size];
+        score += (a.isShootingStar ? STAR_POINTS : POINTS[a.size]) * (ship.skin.pointsMultiplier || 1);
         explode(a.x, a.y, a.isShootingStar ? 14 : a.size * 5);
         // Posible drop del power-up (uno a la vez)
         if (powerups.length === 0 && Math.random() < POWERUP_CHANCE) {
@@ -564,7 +566,7 @@ function update(dt) {
           ship.shield--;
           ship.shieldLull = SHIELD_HIT_LULL;
           a.dead = true;
-          score += a.isShootingStar ? STAR_POINTS : POINTS[a.size];
+          score += (a.isShootingStar ? STAR_POINTS : POINTS[a.size]) * (ship.skin.pointsMultiplier || 1);
           explode(a.x, a.y, a.isShootingStar ? 14 : a.size * 5);
           break;
         }
